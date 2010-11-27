@@ -2,65 +2,29 @@
 import freenect
 import cv
 import numpy as np
-from Xlib import X, display
 
-def array2cv(a):
-  dtype2depth = {
-        'uint8':   cv.IPL_DEPTH_8U,
-        'int8':    cv.IPL_DEPTH_8S,
-        'uint16':  cv.IPL_DEPTH_16U,
-        'int16':   cv.IPL_DEPTH_16S,
-        'int32':   cv.IPL_DEPTH_32S,
-        'float32': cv.IPL_DEPTH_32F,
-        'float64': cv.IPL_DEPTH_64F,
-    }
-  try:
-    nChannels = a.shape[2]
-  except:
-    nChannels = 1
-  cv_im = cv.CreateImageHeader((a.shape[1],a.shape[0]),
-          dtype2depth[str(a.dtype)],
-          nChannels)
-  cv.SetData(cv_im, a.tostring(),
-             a.dtype.itemsize*nChannels*a.shape[1])
-  return cv_im
+from array_mods import *
+from threshold import *
+from mousecontrol import *
+from helpers import *
 
-class Threshold(object):
-    def __init__(self, initial_level):
-        self.level = initial_level
+DEFAULT_THRESHOLD = 640
 
-    def __call__(self, level):
-        self.level = level
-
-d = display.Display()
-s = d.screen()
-root = s.root
-
-def mousepos():
-    """mousepos() --> (x, y) get the mouse coordinates on the screen (linux, Xlib)."""
-    data = root.query_pointer()._data
-    return data["root_x"], data["root_y"]
-
-def toresolution(coord):
-    # 1024 x 600
-    # 320 x 240
-    return (coord[0] / 320.0 * 1024, coord[1] / 240.0 * 600)
-
-depthThreshold = Threshold(640)
-max_x, max_y = 1020, 600
+depthThreshold = Threshold(DEFAULT_THRESHOLD)
 
 cv.NamedWindow('Depth')
-cv.CreateTrackbar('Threshold', 'Depth', 640, 1200, depthThreshold)
+cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
-movable_pos = (100,80)
+movable_pos = (0,0)
+
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
     depth = depth[::2,::2]
-    threshold_depths = (depth <= depthThreshold.level).astype(np.uint8)
 
+    threshold_depths = (depth <= depthThreshold.level).astype(np.uint8)
     depth = array2cv(threshold_depths * depth.astype(np.uint8))
 
-    depth_image = cv.CreateImage(cv.GetSize(depth), cv.IPL_DEPTH_8U, 1)
+    depth_image = cv.CreateImage(cv.GetSize(threshold_depths), cv.IPL_DEPTH_8U, 1)
 
     cv.Smooth(depth, depth_image, cv.CV_GAUSSIAN, 3, 0)
     cv.Dilate(depth_image, depth_image, None, 18)
@@ -90,8 +54,6 @@ while 1:
         cv.Circle(depth, center_point, 10, cv.CV_RGB(255, 100, 0), 1)
 
         mouse_x, mouse_y = mousepos()
-        #   mouse_x_dist = center_point[0] - mouse_x
-        #   mouse_y_dist = center_point[1] - mouse_y
         try:
             if last_center == None:
                 last_center = center_point
@@ -109,11 +71,9 @@ while 1:
         movable_pos = (move_to_pos_x, move_to_pos_y)
         last_center = center_point
         mouse_x, mouse_y = toresolution(movable_pos)
-        root.warp_pointer(mouse_x, 600 - mouse_y)
-        d.sync()
+        mouse_move_to((mouse_x, 600 - mouse_y))
     else:
         last_center = None
-
 
     cv.Circle(depth, (movable_pos[0], 240 - movable_pos[1]), 3, cv.CV_RGB(255, 255, 255), 3)
     cv.ShowImage('Depth', depth)
