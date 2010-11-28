@@ -2,7 +2,7 @@
 Class and functions that work on a series of 2D points in numpy.
 
 Jeffrey Hsu
-"""
+""" 
 
 import numpy as np
 
@@ -24,7 +24,8 @@ class Points(object):
         self.center = (x_avg, y_avg)
         return(x_avg,y_avg)
 
-
+    
+    
     def boundingBox(self):
         """
         Calculates a bounding box from a set of points.  Returns a tuple of the top right
@@ -34,10 +35,9 @@ class Points(object):
         x_max = np.max(self.points[:,1])
         y_min = np.min(self.points[:,0])
         x_min = np.min(self.points[:,1])
-
-        return ((x_max, y_max), (x_min, y_min))
-
-
+        return ((x_max, y_max), (x_min, y_min)) 
+    
+    
     def noiseReduction(self):
         """
         Gaussian Smoothing to reduce the noise.
