@@ -33,12 +33,52 @@ class Threshold(object):
 
     def __call__(self, sliderbar):
         self.p = sliderbar
+        
+class Points(object):
+    """
+    N x 2 numpy array containing 2-Dimensional points.  
+    """
+    
+    def __init__(self, points):
+        self.points = points
+    
+    def calculateCenter(self):
+        """
+        Calculate center from a 2-d array of [x,y] points.  Returns tuple of 
+        center value.  
+        """
+        y_avg = int(sum(self.points[:,0])/float(len(self.points)))
+        x_avg = int(sum(self.points[:,1])/float(len(self.points)))
+        self.center = (x_avg, y_avg)
+        return(x_avg,y_avg)
+    
+    
+    def boundingBox(self):
+        """
+        Calculates a bounding box from a set of points.  Returns a tuple of the top right
+        and the bottom left corners.
+        """
+        y_max = np.max(self.points[:,0])
+        x_max = np.max(self.points[:,1])
+        y_min = np.min(self.points[:,0])
+        x_min = np.min(self.points[:,1])
+        
+        return ((x_max, y_max), (x_min, y_min)) 
+    
+    
+    def noiseReduction(self):
+        """
+        Gaussian Smoothing to reduce the noise.
+        """
+        pass
 
 
 def close(event, x, y, flags, param):
     if event == cv.CV_EVENT_LBUTTONDOWN:
         freenect.sync_stop()
         sys.exit()
+
+
 color = (100,255, 100)
 cv.NamedWindow('Depth')
 cv.SetMouseCallback('Depth', close, param=None)
@@ -49,24 +89,20 @@ while 1:
     depth, dts = freenect.sync_get_depth_np()
     #rgb, rts = freenect.sync_get_rgb_np()
     depth = ((depth <= depthThreshold.p).astype(np.uint8)*depth).astype(np.uint16)
-    points = np.argwhere(depth!=0)
+    dP = Points(np.argwhere(depth!=0))
     avg_dep=0
         #depth = depth.astype(np.uint8)
-    if points.any():
+    if dP.points.any():
+        # Average of the depth values that meet threshold
         depth_values =depth[depth != 0]
         avg_dep=sum(depth_values)/len(depth_values)
-        if len(depth_history) == 5:
-
-        y_max = np.max(points[:,0].ravel())
-        x_max = np.max(points[:,1].ravel())
-        y_min = np.min(points[:,0].ravel())
-        x_min = np.min(points[:,1].ravel())
+        #if len(depth_history) == 5:
         depth = array2cv(depth.astype(np.uint8))
-        cv.Rectangle(depth, (x_max, y_max), (x_min, y_min), color, thickness=3)
+        bound_Rect = dP.boundingBox()
+        cv.Rectangle(depth, bound_Rect[0], bound_Rect[1], color, thickness=3)
         #cv.PutText(detph, str(avg_dep), (50,50), ,  
-        y_avg =reduce(lambda x,y: x+y, points[:,0],0)/float(len(points))
-        x_avg =reduce(lambda x,y: x+y, points[:,1],0)/float(len(points))
-        cv.Circle(depth, (int(x_avg), int(y_avg)), 48, color)
+        cv.Circle(depth, dP.calculateCenter(), 48, color)
+
     #depth = depth.astype(np.uint8)
     cv.ShowImage('Depth', depth)
     cv.WaitKey(10)
