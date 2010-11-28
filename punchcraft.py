@@ -2,13 +2,16 @@
 import freenect
 import cv
 import numpy as np
+from Xlib import display
 
 from array_mods import *
 from threshold import *
 from mousecontrol import *
 from helpers import *
+from jeffFuncs import *
 
 DEFAULT_THRESHOLD = 640
+COLOR = (100, 255, 100)
 
 depthThreshold = Threshold(DEFAULT_THRESHOLD)
 
@@ -16,12 +19,31 @@ cv.NamedWindow('Depth')
 cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
 movable_pos = (0,0)
+mouse_control = MouseControl(display)
 
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
     depth = depth[::2,::2]
 
-    threshold_depths = (depth <= depthThreshold.level).astype(np.uint8)
+    threshold_depths = ((depth <= depthThreshold.level).astype(np.uint8) * depth).astype(np.uint16)
+    depth_points = Points(np.argwhere(threshold_depths!=0))
+    avg_dep=0
+
+    if depth_points.points.any():
+        depth_values = threshold_depths[threshold_depths != 0]
+        threshold_depths = array2cv(threshold_depths.astype(np.uint8))
+        bound_rect = depth_points.boundingBox()
+        cv.Rectangle(threshold_depths, bound_rect[0], bound_rect[1], COLOR, thickness=3)
+        cv.Circle(threshold_depths, depth_points.calculateCenter(), 48, COLOR)
+
+        " depth_points.center - last_center
+        " mouse_countrol.offset_by()
+
+        last_center = depth_points.center
+    else:
+        last_center = (0,0)
+
+    """
     depth = array2cv(threshold_depths * depth.astype(np.uint8))
 
     depth_image = cv.CreateImage(cv.GetSize(threshold_depths), cv.IPL_DEPTH_8U, 1)
@@ -76,7 +98,8 @@ while 1:
         last_center = None
 
     cv.Circle(depth, (movable_pos[0], 240 - movable_pos[1]), 3, cv.CV_RGB(255, 255, 255), 3)
-    cv.ShowImage('Depth', depth)
+    """
+    cv.ShowImage('Depth', threshold_depths)
 
     # Listen for ESC key
     c = cv.WaitKey(7) % 0x100
