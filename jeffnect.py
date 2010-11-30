@@ -26,7 +26,7 @@ class Threshold(object):
     """
         Class for setting thresholds
     """
-    
+
     def __init__(self, initial_value):
         self.p = initial_value
 
@@ -102,7 +102,5 @@ while 1:
         cv.Rectangle(depth, bound_Rect[0], bound_Rect[1], color, thickness=3)
         #cv.PutText(detph, str(avg_dep), (50,50), ,  
         cv.Circle(depth, dP.calculateCenter(), 48, color)
-
-    #depth = depth.astype(np.uint8)
     cv.ShowImage('Depth', depth)
     cv.WaitKey(10)
