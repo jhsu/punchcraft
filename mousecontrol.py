@@ -1,11 +1,6 @@
 from Xlib import X, display
 from numpy import matrix
 
-current_display = display.Display()
-current_screen = current_display.screen()
-current_root = current_screen.root
-
-
 class MouseControl:
     def __init__(self, current_display=None):
         self.display = current_display.Display() if current_display else display.Display()
