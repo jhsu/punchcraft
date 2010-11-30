@@ -6,8 +6,8 @@ current_root = current_screen.root
 
 
 class MouseControl:
-    def __init__(self, display):
-        self.display = display.Display()
+    def __init__(self, current_display=None):
+        self.display = current_display.Display() if current_display else display.Display()
         self.mouse = self.mouse_position()
 
     def update(self):
