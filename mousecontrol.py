@@ -11,6 +11,8 @@ class MouseControl:
         self.display = current_display.Display() if current_display else display.Display()
         self.mouse = self.mouse_position()
         self.last_position = None
+        self.max_y = self.display.screen().height_in_pixels
+        self.max_x = self.display.screen().width_in_pixels
 
     def update(self):
         self.display.sync()
@@ -20,15 +22,30 @@ class MouseControl:
         return data["root_x"], data["root_y"]
 
     def position(self):
-        if(self.last_position != None):
+        if(self.last_position):
             return self.last_position
         else:
             self.last_position = self.mouse_position()
             return self.last_position
 
+    def target_x(self, value):
+        if (value > self.max_x ):
+            value = self.max_x
+        elif (value < 0):
+            value = 0
+        return value
+
+    def target_y(self, value):
+        if (value > self.max_y ):
+            value = self.max_y
+        elif (value < 0):
+            value = 0
+        return value
+
     def to_target(self, target):
-        offset = matrix(target) - matrix(self.position())
-        self.display.warp_pointer(offset.flat[0], offset.flat[1])
+        if (self.last_position):
+            target = (self.target_x(target[0]), self.target_y(target[0]))
+            self.mouse_to(target)
         self.last_position = target
         self.sync()
         return self
