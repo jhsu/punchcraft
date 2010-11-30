@@ -2,7 +2,6 @@
 import freenect
 import cv
 import numpy as np
-from Xlib import display
 
 from array_mods import *
 from threshold import *
@@ -18,8 +17,7 @@ depthThreshold = Threshold(DEFAULT_THRESHOLD)
 cv.NamedWindow('Depth')
 cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
-movable_pos = (0,0)
-mouse_control = MouseControl(display)
+mouse_control = MouseControl()
 
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
@@ -36,12 +34,9 @@ while 1:
         cv.Rectangle(threshold_depths, bound_rect[0], bound_rect[1], COLOR, thickness=3)
         cv.Circle(threshold_depths, depth_points.calculateCenter(), 48, COLOR)
 
-        " depth_points.center - last_center
-        " mouse_countrol.offset_by()
-
-        last_center = depth_points.center
+        mouse_control.to_target(depth_points.center)
     else:
-        last_center = (0,0)
+        mouse_control.reset()
 
     """
     depth = array2cv(threshold_depths * depth.astype(np.uint8))
