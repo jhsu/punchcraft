@@ -17,7 +17,7 @@ depthThreshold = Threshold(DEFAULT_THRESHOLD)
 cv.NamedWindow('Depth')
 cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
-mouse_control = MouseControl()
+mouse_control = MouseControl(320, 240)
 
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
@@ -32,9 +32,10 @@ while 1:
         threshold_depths = array2cv(threshold_depths.astype(np.uint8))
         bound_rect = depth_points.boundingBox()
         cv.Rectangle(threshold_depths, bound_rect[0], bound_rect[1], COLOR, thickness=3)
-        cv.Circle(threshold_depths, depth_points.calculateCenter(), 48, COLOR)
+        cv.Circle(threshold_depths, depth_points.calculateCenter(), 2, COLOR)
 
         mouse_control.to_target(depth_points.center)
+        cv.Circle(threshold_depths, mouse_control.location(), 3, (255,255,255))
     else:
         mouse_control.reset()
 
