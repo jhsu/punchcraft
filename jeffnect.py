@@ -26,7 +26,6 @@ class Threshold(object):
     """
         Class for setting thresholds
     """
-
     def __init__(self, initial_value):
         self.p = initial_value
 
