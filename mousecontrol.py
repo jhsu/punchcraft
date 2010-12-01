@@ -25,19 +25,11 @@ class MouseControl:
         return (x_pos, y_pos)
 
     def target_x(self, value):
-        value = self.virtual_x(value) / float(self.virtual_width) * self.max_x
-        if (value > self.virtual_width):
-            value = self.max_x
-        elif (value < 0):
-            value = 0
-        return (self.virtual_width - value)
+        value = (self.virtual_x(value) / float(self.virtual_width)) * self.max_x
+        return value
 
     def target_y(self, value):
-        value = self.virtual_y(value) / float(self.virtual_height) * self.max_y
-        if (value > self.virtual_height):
-            value = self.max_y
-        elif (value < 0):
-            value = 0
+        value = (self.virtual_y(value) / float(self.virtual_height)) * self.max_y
         return value
 
     def target_position(self, pos):
@@ -48,7 +40,7 @@ class MouseControl:
             value = self.virtual_width
         elif (value < 0):
             value = 0
-        return value
+        return (self.virtual_width - value) # mirror
 
     def virtual_y(self, value):
         if (value > self.virtual_height):
@@ -60,11 +52,16 @@ class MouseControl:
     def virtual_position(self, pos):
         return ( self.virtual_x(pos[0]), self.virtual_y(pos[1]) )
 
-    def to_target(self, target):
-        if (self.position == None):
-            self.position = self.virtual_mouse_position()
+    def location(self):
+        if (self.position):
+            location = self.position
+        else:
+            location = self.virtual_position(self.mouse_position())
+        return location
 
-        self.mouse_to(self.target_position(target))
+    def to_target(self, target):
+        if (self.position != None):
+            self.mouse_to(self.target_position(target))
         self.position = self.virtual_position(target)
         self.sync()
         return self
