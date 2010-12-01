@@ -10,8 +10,7 @@ from mousecontrol import *
 from helpers import *
 from jeffFuncs import *
 from queue import * 
-
-
+#from arrayfilter import *
 DEFAULT_THRESHOLD = 640
 COLOR = (100, 255, 100)
 
@@ -22,14 +21,14 @@ cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
 movable_pos = (0,0)
 mouse_control = MouseControl(display)
-depth_values_queue = Queue(20)
+depth_values_queue = Queue(40)
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
     depth = depth[::2,::2]
-
+    #depth = gaussian(depth)
     threshold_depths = ((depth <= depthThreshold.level).astype(np.uint8) * depth).astype(np.uint16)
     depth_points = Points(np.argwhere(threshold_depths!=0))
-
+    
 
     if depth_points.points.any():
 
@@ -43,7 +42,7 @@ while 1:
         # Sanity check 
         
         depth_values_queue.pop(sum(depth_values)/len(depth_values), timestamp)
-        print depth_values_queue.averages
+        #print(depth_values_queue.averages)
         punch_state = depth_values_queue.punches()
         print(punch_state)
 

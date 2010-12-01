@@ -37,9 +37,8 @@ class Points(object):
         x_min = np.min(self.points[:,1])
         return ((x_max, y_max), (x_min, y_min)) 
     
-    
-    def noiseReduction(self):
+    def kmeans2():
         """
-        Gaussian Smoothing to reduce the noise.
+        Calculates kmeans clustering with a maximum of two groups
         """
         pass
