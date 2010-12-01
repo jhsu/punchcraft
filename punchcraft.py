@@ -17,7 +17,7 @@ depthThreshold = Threshold(DEFAULT_THRESHOLD)
 cv.NamedWindow('Depth')
 cv.CreateTrackbar('Threshold', 'Depth', DEFAULT_THRESHOLD, 1200, depthThreshold)
 
-mouse_control = MouseControl()
+mouse_control = MouseControl(320, 240)
 
 while 1:
     depth, timestamp = freenect.sync_get_depth_np()
