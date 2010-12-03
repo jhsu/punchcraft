@@ -10,6 +10,7 @@ from helpers import *
 from jeffFuncs import *
 from queue import * 
 #from arrayfilter import *
+
 DEFAULT_THRESHOLD = 640
 COLOR = (100, 255, 100)
 
@@ -26,7 +27,7 @@ while 1:
     #depth = gaussian(depth)
     threshold_depths = ((depth <= depthThreshold.level).astype(np.uint8) * depth).astype(np.uint16)
     depth_points = Points(np.argwhere(threshold_depths!=0))
-    
+
 
     if depth_points.points.any():
 
@@ -36,12 +37,12 @@ while 1:
         cv.Circle(threshold_depths, depth_points.calculateCenter(), 2, COLOR)
 
         mouse_control.to_target(depth_points.center)
-        cv.Circle(threshold_depths, mouse_control.location(), 3, (255,255,255))
-        
+        # cv.Circle(threshold_depths, mouse_control.location(), 3, (255,255,255))
+
         # Punching Code
         depth_values = depth[depth <= depthThreshold.level]
         depth_values_queue.pop(sum(depth_values)/len(depth_values), timestamp)
-        #print(depth_values_queue.averages)
+        # print(depth_values_queue.averages)
         punch_state = depth_values_queue.punches()
 
     else:

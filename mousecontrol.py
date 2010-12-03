@@ -1,22 +1,16 @@
-from Xlib import X, display
 from numpy import matrix
+from pymouse import PyMouse
 
 class MouseControl:
-    def __init__(self,virtual_width=None, virtual_height=None, current_display=None):
-        self.display = current_display.Display() if current_display else display.Display()
-        self.mouse = self.mouse_position()
+    def __init__(self,virtual_width=None, virtual_height=None):
+        self.mouse = PyMouse()
         self.position = None
-        self.max_y = self.display.screen().height_in_pixels
-        self.max_x = self.display.screen().width_in_pixels
+        self.max_x, self.max_y = self.mouse.screen_size()
         self.virtual_width = virtual_width
         self.virtual_height = virtual_height
 
-    def update(self):
-        self.display.sync()
-
     def mouse_position(self):
-        data = self.display.screen().root.query_pointer()._data
-        return data["root_x"], data["root_y"]
+        return self.mouse.position()
 
     def virtual_mouse_position(self):
         pos = self.mouse_position()
@@ -25,11 +19,13 @@ class MouseControl:
         return (x_pos, y_pos)
 
     def target_x(self, value):
-        value = (self.virtual_x(value) / float(self.virtual_width)) * self.max_x
+        fraction = value / float(self.virtual_width)
+        value = fraction * self.max_x
         return value
 
     def target_y(self, value):
-        value = (self.virtual_y(value) / float(self.virtual_height)) * self.max_y
+        fraction = value / float(self.virtual_height)
+        value = fraction * self.max_y
         return value
 
     def target_position(self, pos):
@@ -40,7 +36,7 @@ class MouseControl:
             value = self.virtual_width
         elif (value < 0):
             value = 0
-        return (self.virtual_width - value) # mirror
+        return value
 
     def virtual_y(self, value):
         if (value > self.virtual_height):
@@ -56,22 +52,25 @@ class MouseControl:
         if (self.position):
             location = self.position
         else:
-            location = self.virtual_position(self.mouse_position())
+            location = self.virtual_mouse_position()
         return location
 
     def to_target(self, target):
+        if target:
+            target = self.virtual_position(target)
+            target = (self.virtual_width - target[0], target[1])
         if (self.position != None):
-            self.mouse_to(self.target_position(target))
-        self.position = self.virtual_position(target)
-        self.sync()
+            x_dist = target[0] - self.position[0]
+            y_dist = target[1] - self.position[1]
+            real_dist = (self.target_x(x_dist), self.target_y(y_dist))
+            mouse_pos = self.mouse_position()
+            mouse_pos = (mouse_pos[0] + real_dist[0], mouse_pos[1] + real_dist[1])
+            self.mouse_to(mouse_pos)
+        self.position = target
         return self
 
-    def mouse_to(self, position):
-        self.display.screen().root.warp_pointer(position[0], position[1])
-        self.sync()
+    def mouse_to(self, pos):
+        self.mouse.move(pos[0], pos[1])
 
     def reset(self):
         self.position = None
-
-    def sync(self):
-        self.display.sync()
